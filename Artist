@@ -1,0 +1,493 @@
+package SEF_Music;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+
+public class Artist {
+    private String artistID;
+    private String birthDate;
+    private String address;
+    private String bio;
+    private ArrayList<String> occupations;
+    private ArrayList<String> awards;
+    private ArrayList<String> musicGenres;
+
+    public Artist(String artistID, String birthDate, String address, String bio, ArrayList<String> occupations, ArrayList<String> awards, ArrayList<String> musicGenres) {
+        this.artistID = artistID;
+        this.birthDate = birthDate;
+        this.address = address;
+        this.bio = bio;
+        this.occupations = occupations;
+        this.awards = awards;
+        this.musicGenres = musicGenres;
+    }
+    public boolean addArtist() {
+            try {
+                String filePath = "/Users/Ripestaff/Desktop/artists.txt"; // Modify this path accordingly
+                File file = new File(filePath);
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+
+                try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file, true)))) {
+                    writer.println(artistID + "|" + birthDate + "|" + address + "|" + bio + "|" + String.join(",", occupations) + "|" + String.join(",", awards) + "|" + String.join(",", musicGenres));
+                    System.out.println("Artist added to the file: " + artistID);
+                    return true;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.err.println("Error adding the artist to the file: " + artistID);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.err.println("Error creating or accessing the file: " + e.getMessage());
+            }
+            return false;
+        }
+    
+    public boolean updateArtist(String newArtistID, String newBirthDate, String newAddress, String newBio, ArrayList<String> newOccupations, ArrayList<String> newAwards, ArrayList<String> newMusicGenres) {
+        if (validateArtistInfo(newArtistID, newBirthDate, newAddress, newBio, newOccupations, newAwards, newMusicGenres)) {
+            if (Integer.parseInt(birthDate.substring(6)) < 2000) {
+                occupations = newOccupations;
+                newAwards = filterAwardsBefore2000(newAwards);
+            } else {
+                newAwards = filterAwardsAfter2000(newAwards);
+            }
+
+            try {
+                File file = new File("/Users/Ripestaff/Desktop/artists.txt");
+                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                    String line;
+                    ArrayList<String> updatedArtists = new ArrayList<>();
+                    String artistToUpdate = artistID + "|" + birthDate;
+                    while ((line = reader.readLine()) != null) {
+                        if (!line.startsWith(artistToUpdate)) {
+                            updatedArtists.add(line);
+                        }
+                    }
+                    updatedArtists.add(newArtistID + "|" + newBirthDate + "|" + newAddress + "|" + newBio + "|" + String.join(",", newOccupations) + "|" + String.join(",", newAwards) + "|" + String.join(",", newMusicGenres));
+
+                   try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("/Users/Ripestaff/Desktop/artists.txt")))) {
+                    for (String updatedArtist : updatedArtists) {
+                        writer.println(updatedArtist);
+                    }
+                   }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+
+        return false;
+    }
+
+    private ArrayList<String> filterAwardsBefore2000(ArrayList<String> newAwards) {
+        ArrayList<String> filteredAwards = new ArrayList<>();
+        for (String award : newAwards) {
+            int year = Integer.parseInt(award.split(",")[0].trim());
+            if (year < 2000) {
+                filteredAwards.add(award);
+            }
+        }
+        return filteredAwards;
+    }
+
+    // Validation methods
+    private boolean validateArtistInfo() {
+        return validateArtistID() && validateBirthDate() && validateAddress() && validateBio() && validateOccupations() && validateAwards() && validateMusicGenres();
+    }
+
+    private boolean validateArtistInfo(String newArtistID, String newBirthDate, String newAddress, String newBio, ArrayList<String> newOccupations, ArrayList<String> newAwards, ArrayList<String> newMusicGenres) {
+        return validateArtistID(newArtistID) && validateBirthDate(newBirthDate) && validateAddress(newAddress) && validateBio(newBio) && validateOccupations(newOccupations) && validateAwards(newAwards) && validateMusicGenres(newMusicGenres);
+    }
+
+    private boolean validateArtistID() {
+        return artistID.matches("[5-9]{3}[A-Z]{5}[!@#$%^&*()_+\\-=\\[\\]{};':\",.<>/?]{2}");
+    }
+    private boolean validateArtistID(String newArtistID) {
+        return newArtistID.matches("[5-9]{3}[A-Z]{5}[!@#$%^&*()_+\\-=\\[\\]{};':\",.<>/?]{2}");
+    }
+
+    private boolean validateBirthDate() {
+        return birthDate.matches("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(19\\d\\d|20[0-9][0-9])");
+    }
+
+    private boolean validateBirthDate(String newBirthDate) {
+        return newBirthDate.matches("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(19\\d\\d|20[0-9][0-9])");
+    }
+
+    private boolean validateAddress() {
+        return address.matches("(.*)\\|(.*)\\|(.*)");
+    }
+
+    private boolean validateAddress(String newAddress) {
+        return newAddress.matches("(.*)\\|(.*)\\|(.*)");
+    }
+
+    private boolean validateBio() {
+        return bio.length() >= 10 && bio.length() <= 30;
+    }
+
+    private boolean validateBio(String newBio) {
+        return newBio.length() >= 10 && newBio.length() <= 30;
+    }
+
+    private boolean validateOccupations() {
+        return occupations.size() >= 1 && occupations.size() <= 5;
+    }
+
+    private boolean validateOccupations(ArrayList<String> newOccupations) {
+        return newOccupations.size() >= 1 && newOccupations.size() <= 5;
+    }
+
+    private boolean validateAwards() {
+        for (String award : awards) {
+            if (!award.matches("\\d{4},\\s.{4,10}")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean validateAwards(ArrayList<String> newAwards) {
+        for (String award : newAwards) {
+            if (!award.matches("\\d{4},\\s.{4,10}")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private ArrayList<String> filterAwardsAfter2000(ArrayList<String> newAwards) {
+        ArrayList<String> filteredAwards = new ArrayList<>();
+        for (String award : newAwards) {
+            int year = Integer.parseInt(award.split(",")[0].trim());
+            if (year >= 2000) {
+                filteredAwards.add(award);
+            }
+        }
+        return filteredAwards;
+    }
+
+    private boolean validateMusicGenres(ArrayList<String> newMusicGenres) {
+        if (newMusicGenres.size() >= 2 && newMusicGenres.size() <= 5) {
+            boolean containspop = newMusicGenres.contains("pop");
+            boolean containsRock = newMusicGenres.contains("rock");
+            
+            if (containspop && containsRock) {
+                return false;  // Disallow 'pop' and 'rock' together
+            }
+            
+            return true;
+        }
+        return false;
+    }
+    // Unit tests for the addArtist and updateArtist functions 
+        public static void main(String[] args) {
+        	 // Create artist information for Ariana Grande
+            ArrayList<String> arianaGrandeOccupations = new ArrayList<>();
+            arianaGrandeOccupations.add("Singer");
+            arianaGrandeOccupations.add("Actress");
+
+            ArrayList<String> arianaGrandeAwards = new ArrayList<>();
+            arianaGrandeAwards.add("2020, Grammy Award for Best pop Vocal Album");
+
+            ArrayList<String> arianaGrandeMusicGenres = new ArrayList<>();
+            arianaGrandeMusicGenres.add("R&B");
+            arianaGrandeMusicGenres.add("pop");
+
+            Artist arianaGrande = new Artist("AG_12345", "26-06-1993", "Boca Raton, Florida|United States", "Ariana Grande is a talented singer and actress.", arianaGrandeOccupations, arianaGrandeAwards, arianaGrandeMusicGenres);
+
+            boolean addedAriana = arianaGrande.addArtist();
+            System.out.println("Ariana Grande added: " + addedAriana);
+
+            // Display the initial artist information
+            System.out.println("\nInitial Artist Information:");
+            System.out.println(arianaGrande);
+
+            // Define the new artist information for Ariana Grande
+            String newArtistIDAriana = "AG_67890";  // Change the artist's ID
+            String newBirthDateAriana = "26-06-1989";  // Change the birthdate
+            String newAddressAriana = "Los Angeles, California|United States";  // Change the address
+            String newBioAriana = "Ariana Grande is an international superstar, known for her incredible vocal range.";  // Change the bio
+
+            ArrayList<String> newOccupationsAriana = new ArrayList<>();
+            newOccupationsAriana.add("Singer");
+            newOccupationsAriana.add("Songwriter");  // Change the occupation
+
+            ArrayList<String> newAwardsAriana = new ArrayList<>();
+            newAwardsAriana.add("2022, Grammy Award for Album of the Year");  // Change and add a new award
+
+            ArrayList<String> newMusicGenresAriana = new ArrayList<>();
+            newMusicGenresAriana.add("pop");
+            newMusicGenresAriana.add("Classic");  // Change the music genres
+
+            // Validate the new artist information for Ariana Grande
+            if (arianaGrande.validateArtistInfo(newArtistIDAriana, newBirthDateAriana, newAddressAriana, newBioAriana, newOccupationsAriana, newAwardsAriana, newMusicGenresAriana)) {
+                // Update the artist information for Ariana Grande
+                boolean updatedAriana = arianaGrande.updateArtist(newArtistIDAriana, newBirthDateAriana, newAddressAriana, newBioAriana, newOccupationsAriana, newAwardsAriana, newMusicGenresAriana);
+
+                if (updatedAriana) {
+                    System.out.println("\nAriana Grande's Information Updated Successfully:");
+                    System.out.println(arianaGrande);
+                } else {
+                    System.out.println("\nFailed to Update Ariana Grande's Information. Please check the validation rules.");
+                }
+            } else {
+                System.out.println("\nFailed to Validate Ariana Grande's New Information. Please check the validation rules.");
+            }
+            // Create artist information for Taylor Swift
+            ArrayList<String> taylorSwiftOccupations = new ArrayList<>();
+            taylorSwiftOccupations.add("Singer");
+            taylorSwiftOccupations.add("Songwriter");
+
+            ArrayList<String> taylorSwiftAwards = new ArrayList<>();
+            taylorSwiftAwards.add("2021, Global Icon Award");
+
+            ArrayList<String> taylorSwiftMusicGenres = new ArrayList<>();
+            taylorSwiftMusicGenres.add("pop");
+            taylorSwiftMusicGenres.add("Country");
+
+            Artist taylorSwift = new Artist("TS_6789", "13-12-1989", "Reading, Pennsylvania|United States", "Taylor Swift is a successful singer-songwriter.", taylorSwiftOccupations, taylorSwiftAwards, taylorSwiftMusicGenres);
+
+            boolean addedTaylor = taylorSwift.addArtist();
+            System.out.println("\nTaylor Swift added: " + addedTaylor);
+
+            // Display the initial artist information for Taylor Swift
+            System.out.println("\nInitial Artist Information:");
+            System.out.println(taylorSwift);
+
+            // Define the new artist information for Taylor Swift
+            String newArtistIDTaylor = "TS_9876";
+            String newBirthDateTaylor = "22-11-1987";
+            String newAddressTaylor = "Nashville, Tennessee|United States";
+            String newBioTaylor = "An updated bio for Taylor Swift.";
+
+            ArrayList<String> newOccupationsTaylor = new ArrayList<>();
+            newOccupationsTaylor.add("Singer");
+            newOccupationsTaylor.add("Songwriter");
+            newOccupationsTaylor.add("Actress");
+
+            ArrayList<String> newAwardsTaylor = new ArrayList<>();
+            newAwardsTaylor.add("2022, Grammy Award for Album of the Year");
+
+            ArrayList<String> newMusicGenresTaylor = new ArrayList<>();
+            newMusicGenresTaylor.add("pop");
+            newMusicGenresTaylor.add("Country");
+            newMusicGenresTaylor.add("Rock");
+
+            // Update the artist information for Taylor Swift
+            boolean updatedTaylor = taylorSwift.updateArtist(newArtistIDTaylor, newBirthDateTaylor, newAddressTaylor, newBioTaylor, newOccupationsTaylor, newAwardsTaylor, newMusicGenresTaylor);
+
+            if (updatedTaylor) {
+                System.out.println("\nTaylor Swift's Information Updated Successfully:");
+                System.out.println(taylorSwift);
+            } else {
+                System.out.println("\nFailed to Update Taylor Swift's Information. Please check the validation rules.");
+            }
+
+            // Create artist information for Olivia Rodrigo
+            ArrayList<String> oliviaRodrigoOccupations = new ArrayList<>();
+            oliviaRodrigoOccupations.add("Singer");
+            oliviaRodrigoOccupations.add("Songwriter");
+
+            ArrayList<String> oliviaRodrigoAwards = new ArrayList<>();
+            oliviaRodrigoAwards.add("2021, MTV Video Music Award for Song of the Year");
+
+            ArrayList<String> oliviaRodrigoMusicGenres = new ArrayList<>();
+            oliviaRodrigoMusicGenres.add("pop");
+            oliviaRodrigoMusicGenres.add("Alternative");
+
+            Artist oliviaRodrigo = new Artist("OR_4567", "20-02-2003", "Temecula, California|United States", "Olivia Rodrigo is a rising pop sensation.", oliviaRodrigoOccupations, oliviaRodrigoAwards, oliviaRodrigoMusicGenres);
+
+            boolean addedOlivia = oliviaRodrigo.addArtist();
+            System.out.println("\nOlivia Rodrigo added: " + addedOlivia);
+
+            // Display the initial artist information for Olivia Rodrigo
+            System.out.println("\nInitial Artist Information:");
+            System.out.println(oliviaRodrigo);
+
+            // Define the new artist information for Olivia Rodrigo
+            String newArtistIDOlivia = "OR_7654";
+            String newBirthDateOlivia = "18-08-2001";
+            String newAddressOlivia = "Los Angeles, CA|United States";
+            String newBioOlivia = "An updated bio for Olivia Rodrigo.";
+
+            ArrayList<String> newOccupationsOlivia = new ArrayList<>();
+            newOccupationsOlivia.add("Singer");
+            newOccupationsOlivia.add("Actress");
+
+            ArrayList<String> newAwardsOlivia = new ArrayList<>();
+            newAwardsOlivia.add("2022, Grammy Award for Best New Artist");
+
+            ArrayList<String> newMusicGenresOlivia = new ArrayList<>();
+            newMusicGenresOlivia.add("pop");
+            newMusicGenresOlivia.add("Rock");
+
+            // Update the artist information for Olivia Rodrigo
+            boolean updatedOlivia = oliviaRodrigo.updateArtist(newArtistIDOlivia, newBirthDateOlivia, newAddressOlivia, newBioOlivia, newOccupationsOlivia, newAwardsOlivia, newMusicGenresOlivia);
+
+            if (updatedOlivia) {
+                System.out.println("\nOlivia Rodrigo's Information Updated Successfully:");
+                System.out.println(oliviaRodrigo);
+            } else {
+                System.out.println("\nFailed to Update Olivia Rodrigo's Information. Please check the validation rules.");
+            }
+
+            // Create artist information for Katy Perry
+            ArrayList<String> katyPerryOccupations = new ArrayList<>();
+            katyPerryOccupations.add("Singer");
+            katyPerryOccupations.add("Songwriter");
+
+            ArrayList<String> katyPerryAwards = new ArrayList<>();
+            katyPerryAwards.add("2011, MTV Video Music Award for Video of the Year");
+
+            ArrayList<String> katyPerryMusicGenres = new ArrayList<>();
+            katyPerryMusicGenres.add("pop");
+            katyPerryMusicGenres.add("Dance");
+
+            Artist katyPerry = new Artist("KP_7890", "25-10-1984", "Santa Barbara, California|United States", "Katy Perry is a pop superstar.", katyPerryOccupations, katyPerryAwards, katyPerryMusicGenres);
+
+            boolean addedKaty = katyPerry.addArtist();
+            System.out.println("\nKaty Perry added: " + addedKaty);
+
+            // Display the initial artist information for Katy Perry
+            System.out.println("\nInitial Artist Information:");
+            System.out.println(katyPerry);
+
+            // Define the new artist information for Katy Perry
+            String newArtistIDKaty = "KP_4567";
+            String newBirthDateKaty = "08-03-1986";
+            String newAddressKaty = "Los Angeles, CA|United States";
+            String newBioKaty = "An updated bio for Katy Perry.";
+
+            ArrayList<String> newOccupationsKaty = new ArrayList<>();
+            newOccupationsKaty.add("Singer");
+            newOccupationsKaty.add("Songwriter");
+            newOccupationsKaty.add("Actress");
+
+            ArrayList<String> newAwardsKaty = new ArrayList<>();
+            newAwardsKaty.add("2020, Grammy Award for Best pop Solo Performance");
+
+            ArrayList<String> newMusicGenresKaty = new ArrayList<>();
+            newMusicGenresKaty.add("pop");
+            newMusicGenresKaty.add("Dance");
+            newMusicGenresKaty.add("Electropop");
+
+            // Update the artist information for Katy Perry
+            boolean updatedKaty = katyPerry.updateArtist(newArtistIDKaty, newBirthDateKaty, newAddressKaty, newBioKaty, newOccupationsKaty, newAwardsKaty, newMusicGenresKaty);
+
+            if (updatedKaty) {
+                System.out.println("\nKaty Perry's Information Updated Successfully:");
+                System.out.println(katyPerry);
+            } else {
+                System.out.println("\nFailed to Update Katy Perry's Information. Please check the validation rules.");
+            }
+
+            // Create artist information for John Legend
+            ArrayList<String> johnLegendOccupations = new ArrayList<>();
+            johnLegendOccupations.add("Singer");
+            johnLegendOccupations.add("Songwriter");
+            johnLegendOccupations.add("Actor");
+
+            ArrayList<String> johnLegendAwards = new ArrayList<>();
+            johnLegendAwards.add("2015, Academy Award for Best Original Song");
+            johnLegendAwards.add("2020, Grammy Award for Best Rap/Sung Performance");
+
+            ArrayList<String> johnLegendMusicGenres = new ArrayList<>();
+            johnLegendMusicGenres.add("R&B");
+            johnLegendMusicGenres.add("Soul");
+
+            Artist johnLegend = new Artist("JL_1010", "28-12-1978", "Springfield, Ohio|United States", "John Legend is a multi-talented artist.", johnLegendOccupations, johnLegendAwards, johnLegendMusicGenres);
+
+            boolean addedJohn = johnLegend.addArtist();
+            System.out.println("\nJohn Legend added: " + addedJohn);
+
+            // Display the initial artist information for John Legend
+            System.out.println("\nInitial Artist Information:");
+            System.out.println(johnLegend);
+
+            // Define the new artist information for John Legend
+            String newArtistIDJohn = "JL_2022";
+            String newBirthDateJohn = "10-09-1980";
+            String newAddressJohn = "Los Angeles, CA|United States";
+            String newBioJohn = "An updated bio for John Legend.";
+
+            ArrayList<String> newOccupationsJohn = new ArrayList<>();
+            newOccupationsJohn.add("Singer");
+            newOccupationsJohn.add("Songwriter");
+
+            ArrayList<String> newAwardsJohn = new ArrayList<>();
+            newAwardsJohn.add("2022, Academy Award for Best Original Song");
+
+            ArrayList<String> newMusicGenresJohn = new ArrayList<>();
+            newMusicGenresJohn.add("R&B");
+            newMusicGenresJohn.add("Soul");
+            newMusicGenresJohn.add("pop");
+
+            // Update the artist information for John Legend
+            boolean updatedJohn = johnLegend.updateArtist(newArtistIDJohn, newBirthDateJohn, newAddressJohn, newBioJohn, newOccupationsJohn, newAwardsJohn, newMusicGenresJohn);
+
+            if (updatedJohn) {
+                System.out.println("\nJohn Legend's Information Updated Successfully:");
+                System.out.println(johnLegend);
+            } else {
+                System.out.println("\nFailed to Update John Legend's Information. Please check the validation rules.");
+            }
+
+            // Create artist information for Tate McRae
+            ArrayList<String> tateMcRaeOccupations = new ArrayList<>();
+            tateMcRaeOccupations.add("Singer");
+            tateMcRaeOccupations.add("Dancer");
+
+            ArrayList<String> tateMcRaeAwards = new ArrayList<>();
+            tateMcRaeAwards.add("2020, Juno Award for Breakthrough Artist of the Year");
+
+            ArrayList<String> tateMcRaeMusicGenres = new ArrayList<>();
+            tateMcRaeMusicGenres.add("pop");
+            tateMcRaeMusicGenres.add("Indie");
+
+            Artist tateMcRae = new Artist("TM_2021", "01-07-2003", "Calgary, Alberta|Canada", "Tate McRae is a young and talented artist.", tateMcRaeOccupations, tateMcRaeAwards, tateMcRaeMusicGenres);
+
+            boolean addedTate = tateMcRae.addArtist();
+            System.out.println("\nTate McRae added: " + addedTate);
+
+            // Display the initial artist information for Tate McRae
+            System.out.println("\nInitial Artist Information:");
+            System.out.println(tateMcRae);
+
+            // Define the new artist information for Tate McRae
+            String newArtistIDTate = "TM_5678";
+            String newBirthDateTate = "17-09-2002";
+            String newAddressTate = "Los Angeles, CA|United States";
+            String newBioTate = "An updated bio for Tate McRae.";
+
+            ArrayList<String> newOccupationsTate = new ArrayList<>();
+            newOccupationsTate.add("Singer");
+            newOccupationsTate.add("Dancer");
+            newOccupationsTate.add("Actress");
+
+            ArrayList<String> newAwardsTate = new ArrayList<>();
+            newAwardsTate.add("2021, MTV Europe Music Award for Best Push Artist");
+
+            ArrayList<String> newMusicGenresTate = new ArrayList<>();
+            newMusicGenresTate.add("pop");
+            newMusicGenresTate.add("R&B");
+
+            // Update the artist information for Tate McRae
+            boolean updatedTate = tateMcRae.updateArtist(newArtistIDTate, newBirthDateTate, newAddressTate, newBioTate, newOccupationsTate, newAwardsTate, newMusicGenresTate);
+
+            if (updatedTate) {
+                System.out.println("\nTate McRae's Information Updated Successfully:");
+                System.out.println(tateMcRae);
+            } else {
+                System.out.println("\nFailed to Update Tate McRae's Information. Please check the validation rules.");
+            }
+        }
+    }
